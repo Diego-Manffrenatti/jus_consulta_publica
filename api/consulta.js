@@ -1,6 +1,21 @@
 import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 
+export default async function handler(req, res) {
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Use POST' });
+    }
+    console.log('▶️ handler invoked, body=', req.body);
+    // … resto do seu código …
+    res.setHeader('Access-Control-Allow-Origin','*');
+    return res.status(200).json({ processos: allResults });
+  } catch (e) {
+    console.error('❌ erro no handler:', e);
+    return res.status(500).json({ error: e.message });
+  }
+}
+
 const SITES = [
   {
     name: 'trf1-pje1g',
