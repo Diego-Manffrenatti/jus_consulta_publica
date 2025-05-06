@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"/><title>Consulta Pública de Processos</title></head>
+<head>
+    <meta charset="UTF-8" />
+    <title>Consulta Pública de Processos</title>
+</head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 <textarea id="input" rows="10" cols="50" placeholder="Cole CNPJs (um por linha)"></textarea><br/>
@@ -9,33 +12,63 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
+    // Define a URL da API dinâmica, baseado no host atual
     const API_URL = window.location.origin + '/api/consulta';
+
+    // Handler do botão "Consultar"
     document.getElementById('btnConsulta').onclick = async () => {
-      console.log('🔍 clicou');
+      console.log('🔍 Botão Consultar clicado');
       const raw = document.getElementById('input').value
-        .split('\n').map(s=>s.replace(/\D/g,'')).filter(s=>s.length===14);
-      console.log('📋', raw);
+        .split('\n')
+        .map(s => s.replace(/\D/g, ''))
+        .filter(s => s.length === 14);
+      console.log('📋 CNPJs a consultar:', raw);
+
       try {
         const resp = await fetch(API_URL, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cnpjs: raw })
         });
-        console.log('🌐', resp.status);
-        if (!resp.ok) throw new Error(resp.status);
+        console.log('🌐 Fetch enviado para', API_URL, 'Status:', resp.status);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
         const { processos } = await resp.json();
-        console.log('📦', processos);
+        console.log('📦 Response JSON:', processos);
+
+        // Atribui globalmente para o download
+        window.RESULTS = processos;
+
         alert(`Encontrados ${processos.length} registros.`);
         document.getElementById('btnDownload').disabled = false;
-      } catch (e) {
-        console.error(e);
-        alert('Erro ao consultar');
+      } catch (err) {
+        console.error('❌ Erro ao consultar:', err);
+        alert('Erro ao consultar. Veja o console para detalhes.');
       }
     };
+
+    // Handler do botão "Baixar Excel"
     document.getElementById('btnDownload').onclick = () => {
-      const data = window.RESULTS.map(r=>({
-        Origem:r.origem,CNPJ:r.cnpj,Número:r.numero,Classe:r.classe,Data:r.data
+      // Valida que exista resultados
+      if (!window.RESULTS) {
+        alert('Nenhum resultado disponível. Primeiro clique em Consultar e aguarde.');
+        return;
+      }
+      // Valida que o array não esteja vazio
+      if (!Array.isArray(window.RESULTS) || window.RESULTS.length === 0) {
+        alert('Não há processos para download.');
+        return;
+      }
+
+      // Converte para formato de tabela
+      const data = window.RESULTS.map(r => ({
+        Origem: r.origem,
+        CNPJ:   r.cnpj,
+        Número: r.numero,
+        Classe: r.classe,
+        Data:   r.data
       }));
+
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Processos');
