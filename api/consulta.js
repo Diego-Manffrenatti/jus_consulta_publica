@@ -10,7 +10,7 @@ const SITES = [
 ];
 
 export default async function handler(req, res) {
-console.log('🚀 Executando handler atualizado do TRF1 PJe1G');
+console.log('🚀 Executando handler atualizado');
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
     const { cnpjs } = req.body;
