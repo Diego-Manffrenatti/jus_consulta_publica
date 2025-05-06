@@ -1,6 +1,7 @@
 {
   "name": "jus_consulta_publica",
   "version": "1.0.0",
+  "type": "module",
   "description": "Consultar os processos de um determinado CNPJ no âmbito federal",
   "main": "index.js",
   "scripts": {

@@ -6,7 +6,7 @@ const SITES = [
     url:  'https://pje1g.trf1.jus.br/consultapublica/ConsultaPublica/listView.seam',
     cnpjField: 'fPP:dpDec:documentoParte'
   },
-  // … outros sites …
+  // … adicione cada URL listada, ajustando name, url e cnpjField …
 ];
 
 export default async function handler(req, res) {
@@ -17,16 +17,13 @@ export default async function handler(req, res) {
 
     for (let site of SITES) {
       for (let cnpj of cnpjs) {
-        // 1) GET inicial
         const init = await fetch(site.url, { headers: { 'User-Agent': 'Mozilla' } });
         const cookies = init.headers.get('set-cookie') || '';
         const html1   = await init.text();
         const $1      = cheerio.load(html1);
 
-        // 2) Clona todos os campos do form[name="fPP"]
         const params = new URLSearchParams();
         const formEl = $1('form[name="fPP"]');
-
         formEl.find('input').each((i, el) => {
           const name = $1(el).attr('name');
           const val  = $1(el).attr('value') || '';
@@ -43,14 +40,12 @@ export default async function handler(req, res) {
           if (name) params.set(name, val);
         });
 
-        // 3) Sobrepõe CNPJ, form-name, botão e radios
         params.set(site.cnpjField, cnpj);
         params.set('fPP', 'fPP');
         params.set('fPP:searchProcessos', 'Pesquisar');
         params.set('mascaraProcessoReferenciaRadio', 'on');
         params.set('tipoMascaraDocumento', 'on');
 
-        // 4) POST
         const post = await fetch(site.url, {
           method: 'POST',
           headers: {
@@ -63,8 +58,17 @@ export default async function handler(req, res) {
         const html2 = await post.text();
         const $2    = cheerio.load(html2);
 
-        // 5) Extrai tabela
-        $2('table#tabelaResultado tbody tr').each((i, tr) => {
+        let rows = $2('table#tabelaResultado tbody tr');
+        if (!rows.length) {
+          for (let tbl of $2('table').toArray()) {
+            const $tbl = $2(tbl);
+            if ($tbl.find('tbody tr').first().find('td').length === 3) {
+              rows = $tbl.find('tbody tr');
+              break;
+            }
+          }
+        }
+        rows.each((i, tr) => {
           const cols = $2(tr).find('td');
           allResults.push({
             origem: site.name,
@@ -77,8 +81,9 @@ export default async function handler(req, res) {
       }
     }
 
-    res.setHeader('Access-Control-Allow-Origin','*');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({ processos: allResults });
+
   } catch (e) {
     console.error('Erro na Function:', e);
     return res.status(500).json({ error: e.message });
