@@ -181,6 +181,13 @@ function montarLista() {
   });
 }
 
+// Selecionar todos / desselecionar todos
+function setAllCheckboxes(checked) {
+  document
+    .querySelectorAll('#cnpjCheckboxes input[type="checkbox"]')
+    .forEach(cb => cb.checked = checked);
+}
+
 async function consultaEmLote(cnpjs) {
   const resultados = [];
   const total = cnpjs.length;
@@ -204,33 +211,49 @@ async function consultaEmLote(cnpjs) {
   return resultados;
 }
 
-document.getElementById('btnConsulta').onclick = async () => {
-  const checks = Array.from(document.querySelectorAll('#cnpjCheckboxes input:checked'));
-  if (!checks.length) {
-    alert('Marque ao menos um CNPJ');
-    return;
-  }
-  const cnpjs = checks.map(cb => cb.dataset.cnpj);
-  window.RESULTS = await consultaEmLote(cnpjs);
-  document.getElementById('btnDownload').disabled = !window.RESULTS.length;
-};
+window.addEventListener('DOMContentLoaded', () => {
+  montarLista();
 
-document.getElementById('btnDownload').onclick = () => {
-  if (!window.RESULTS || !window.RESULTS.length) {
-    alert('Nada para exportar');
-    return;
-  }
-  const data = window.RESULTS.map(r => ({
-    Origem:               r.origem,
-    CNPJ:                 formatCnpjMask(r.cnpj),
-    Processo:             r.processo,
-    Descrição:            r.descricao,
-    'Última movimentação': r.ultimaMovimentacao
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Processos');
-  XLSX.writeFile(wb, 'processos.xlsx');
-};
+  // Selecionar todos
+  document.getElementById('btnSelectAll')
+    .addEventListener('click', () => setAllCheckboxes(true));
 
-window.addEventListener('DOMContentLoaded', montarLista);
+  // Desselec. todos
+  document.getElementById('btnDeselectAll')
+    .addEventListener('click', () => setAllCheckboxes(false));
+
+  // Consulta
+  document.getElementById('btnConsulta')
+    .addEventListener('click', async () => {
+      const checks = Array.from(
+        document.querySelectorAll('#cnpjCheckboxes input:checked')
+      );
+      if (!checks.length) {
+        alert('Marque ao menos um CNPJ');
+        return;
+      }
+      const cnpjs = checks.map(cb => cb.dataset.cnpj);
+      window.RESULTS = await consultaEmLote(cnpjs);
+      document.getElementById('btnDownload').disabled = !window.RESULTS.length;
+    });
+
+  // Download Excel
+  document.getElementById('btnDownload')
+    .addEventListener('click', () => {
+      if (!window.RESULTS || !window.RESULTS.length) {
+        alert('Nada para exportar');
+        return;
+      }
+      const data = window.RESULTS.map(r => ({
+        Origem:               r.origem,
+        CNPJ:                 formatCnpjMask(r.cnpj),
+        Processo:             r.processo,
+        Descrição:            r.descricao,
+        'Última movimentação': r.ultimaMovimentacao
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Processos');
+      XLSX.writeFile(wb, 'processos.xlsx');
+    });
+});
