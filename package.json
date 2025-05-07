@@ -5,7 +5,8 @@
   "description": "Consultar os processos de um determinado CNPJ no âmbito federal",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,9 @@
   },
   "homepage": "https://github.com/Diego-Manffrenatti/jus_consulta_publica#readme",
   "dependencies": {
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^5.1.0",
+    "playwright": "^1.52.0",
+    "xlsx": "^0.18.5"
   }
 }
