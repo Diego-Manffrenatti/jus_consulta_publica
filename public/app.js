@@ -159,7 +159,7 @@ const CNPJS_FIXOS = [
   { name: 'Wilson Sons Terminais e Logística Ltda',           cnpj: '03852972000100' }
 ];
 
-// formata para "00.000.000/0000-00"
+// formata para máscara 00.000.000/0000-00
 function formatCnpjMask(c) {
   return c.replace(
     /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
