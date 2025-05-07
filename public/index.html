@@ -3,63 +3,31 @@
 <head>
     <meta charset="UTF-8" />
     <title>Consulta Pública de Processos</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
-<textarea id="input" rows="10" cols="50" placeholder="Cole CNPJs (um por linha)"></textarea><br/>
-<button id="btnConsulta">Consultar</button>
+
+<!-- Lista de CNPJs com checkbox -->
+<div id="cnpjList">
+    <h2>Selecione os CNPJs</h2>
+    <ul id="cnpjCheckboxes"></ul>
+    <button id="btnConsulta">Consultar Selecionados</button>
+</div>
+
+<!-- Spinner e progresso -->
+<div id="loading" class="hidden">
+    <span class="spinner"></span>
+    <span id="loadingText">Carregando…</span>
+</div>
+<div id="progress"></div>
+
+<!-- Download -->
 <button id="btnDownload" disabled>Baixar Excel</button>
 
-<!-- Reinsere o SheetJS no cliente -->
+<!-- SheetJS -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script>
-    const API_URL = window.location.origin + '/api/consulta';
-
-    document.getElementById('btnConsulta').onclick = async () => {
-      const raw = document.getElementById('input').value
-        .split('\n')
-        .map(s => s.replace(/\D/g, ''))
-        .filter(s => s.length === 14);
-
-      try {
-        const resp = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cnpjs: raw })
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const { processos } = await resp.json();
-        window.RESULTS = processos;
-
-        alert(`Encontrados ${processos.length} registros.`);
-        document.getElementById('btnDownload').disabled = false;
-      } catch (err) {
-        console.error('Erro ao consultar:', err);
-        alert('Erro ao consultar. Veja o console para detalhes.');
-      }
-    };
-
-    document.getElementById('btnDownload').onclick = () => {
-      if (!window.RESULTS || !window.RESULTS.length) {
-        alert('Não há processos para download.');
-        return;
-      }
-
-      // Monta array para o Excel
-      const data = window.RESULTS.map(r => ({
-        Origem:               r.origem,
-        CNPJ:                 r.cnpj,
-        Processo:             r.processo,
-        Descrição:            r.descricao,
-        'Última movimentação': r.ultimaMovimentacao
-      }));
-
-      // Gera planilha no cliente
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Processos');
-      XLSX.writeFile(wb, 'processos.xlsx');
-    };
-</script>
+<!-- Nosso código -->
+<script src="app.js"></script>
 </body>
 </html>
