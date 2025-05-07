@@ -8,29 +8,28 @@
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<!-- Lista de CNPJs com checkbox -->
 <div id="cnpjList">
     <h2>Selecione os CNPJs</h2>
-    +   <!-- controles de seleção -->
-    +   <button id="btnSelectAll">Selecionar todos</button>
-    +   <button id="btnDeselectAll">Desselec. todos</button>
+
+    <!-- CONTROLES SEM OS ++ -->
+    <div class="controls">
+        <button id="btnSelectAll" class="btn-secondary">Marcar todos</button>
+        <button id="btnDeselectAll" class="btn-secondary">Desmarcar todos</button>
+    </div>
+
     <ul id="cnpjCheckboxes"></ul>
-    <button id="btnConsulta">Consultar Selecionados</button>
+    <button id="btnConsulta" class="btn-primary">Consultar selecionados</button>
 </div>
 
-<!-- Spinner e progresso -->
 <div id="loading" class="hidden">
     <span class="spinner"></span>
     <span id="loadingText">Carregando…</span>
 </div>
 <div id="progress"></div>
 
-<!-- Download -->
-<button id="btnDownload" disabled>Baixar Excel</button>
+<button id="btnDownload" class="btn-primary" disabled>Baixar Excel</button>
 
-<!-- SheetJS -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<!-- Nosso código -->
 <script src="app.js"></script>
 </body>
 </html>
