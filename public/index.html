@@ -3,31 +3,48 @@
 <head>
     <meta charset="UTF-8" />
     <title>Consulta Pública de Processos</title>
-    <link rel="stylesheet" href="style.css" />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    />
+    <style>
+        body { padding: 2rem; }
+        #warnings .alert { margin-top: 1rem; }
+        #loading { display: none; }
+    </style>
 </head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<div id="cnpjList">
-    <h2>Selecione os CNPJs</h2>
+<textarea id="input" class="form-control" rows="4"
+          placeholder="Cole CNPJs (um por linha)"></textarea>
 
-    <!-- CONTROLES SEM OS ++ -->
-    <div class="controls">
-        <button id="btnSelectAll" class="btn-secondary">Marcar todos</button>
-        <button id="btnDeselectAll" class="btn-secondary">Desmarcar todos</button>
-    </div>
-
-    <ul id="cnpjCheckboxes"></ul>
-    <button id="btnConsulta" class="btn-primary">Consultar selecionados</button>
+<div class="mt-2">
+    <button id="btnSelectAll" class="btn btn-sm btn-outline-primary">
+        Selecionar todos
+    </button>
+    <button id="btnClearAll" class="btn btn-sm btn-outline-secondary">
+        Limpar seleção
+    </button>
 </div>
 
-<div id="loading" class="hidden">
-    <span class="spinner"></span>
-    <span id="loadingText">Carregando…</span>
+<div class="mt-3">
+    <button id="btnConsulta" class="btn btn-primary">
+        Iniciar consulta
+    </button>
+    <button id="btnDownload" class="btn btn-success" disabled>
+        Exportar para Excel
+    </button>
 </div>
-<div id="progress"></div>
 
-<button id="btnDownload" class="btn-primary" disabled>Baixar Excel</button>
+<div id="loading" class="mt-3">
+    <div class="spinner-border text-info" role="status"></div>
+    <span class="ml-2">Aguarde, consultando…</span>
+</div>
+
+<div id="warnings"></div>
+
+<pre id="log" style="display:none; background:#f8f9fa; padding:1rem;"></pre>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>

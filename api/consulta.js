@@ -1,5 +1,6 @@
 // api/consulta.js
 import * as cheerio from 'cheerio';
+import he from 'he';
 
 function formatCnpj(cnpjRaw) {
   const digits = cnpjRaw.replace(/\D/g, '').padStart(14, '0');
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
             : $el.attr('value') || '';
         params.set(name, val);
       });
-    // overrides idênticos
+
     params.set('AJAXREQUEST', '_viewRoot');
     params.set('mascaraProcessoReferenciaRadio', 'on');
     params.set('tipoMascaraDocumento', 'on');
@@ -77,29 +78,26 @@ export default async function handler(req, res) {
     const rows = $2('table.rich-table tbody tr');
     console.log('Linhas encontradas:', rows.length);
 
-    rows.each((i, tr) => {
+    for (let i = 0; i < rows.length; i++) {
+      const tr   = rows[i];
       const $tr  = $2(tr);
       const cols = $tr.find('td');
       console.log(` Linha ${i}, cols=${cols.length}`);
 
-      // ** Processo e Descrição na COLUNA 1 **
-      const td1 = cols.eq(1);
-      const nodes = td1.contents().toArray();
-      // Filtra só nós de texto e limpa
-      const texts = nodes
+      // Processo e Descrição
+      const texts = cols.eq(1).contents().toArray()
         .filter(n => n.type === 'text' && n.data.trim())
         .map(n => n.data.trim());
-      console.log('    texts coluna 1 raw:', texts);
       const processo  = texts[0] || '';
       const descricao = texts[1] || '';
       console.log(`    processo: "${processo}"`);
       console.log(`    descricao: "${descricao}"`);
       if (!processo) {
         console.log(`    > Linha ${i} ignorada (sem processo)`);
-        return;
+        continue;
       }
 
-      // ** Última movimentação na COLUNA 2 **
+      // Última movimentação
       const mov = cols.eq(2).text()
         .split(/\r?\n/)
         .map(l => l.trim())
@@ -107,14 +105,38 @@ export default async function handler(req, res) {
         .join(' ');
       console.log(`    ultimaMovimentacao: "${mov}"`);
 
+      // Detalhes para número e objeto (antes era "assunto")
+      const onclick = cols.eq(0).find('a').attr('onclick') || '';
+      const m = onclick.match(/'(\/consultapublica[^']*)'/);
+      let numero = '', objeto = '';
+      if (m && m[1]) {
+        const urlDet = BASE + m[1];
+        console.log(`    → GET detalhe em: ${urlDet}`);
+        const detResp = await fetch(urlDet, {
+          headers: { 'User-Agent': 'Mozilla', 'Cookie': cookies }
+        });
+        console.log(`      status detalhe [${i}]:`, detResp.status);
+        const detHtml = await detResp.text();
+        const $d      = cheerio.load(detHtml);
+
+        numero = $d('div.propertyView:has(label:contains("Número Processo")) .value').text().trim();
+        console.log(`      número: "${numero}"`);
+
+        objeto = $d('div.propertyView:has(label:contains("Assunto")) .value').text().trim();
+        objeto = he.decode(objeto);
+        console.log(`      objeto: "${objeto}"`);
+      }
+
       resultados.push({
         origem:             'trf1-pje1g',
         cnpj,
         processo,
         descricao,
-        ultimaMovimentacao: mov
+        ultimaMovimentacao: mov,
+        numero,
+        objeto
       });
-    });
+    }
   }
 
   console.log('\nTotal coletado:', resultados.length);
