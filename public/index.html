@@ -9,26 +9,27 @@
     />
     <style>
         body { padding: 2rem; }
-        #warnings .alert { margin-top: 1rem; }
         #loading { display: none; }
+        #cnpjCheckboxes { max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<textarea id="input" class="form-control" rows="4"
-          placeholder="Cole CNPJs (um por linha)"></textarea>
+<div id="cnpjCheckboxes" class="border p-2 mb-2">
+    <!-- checkboxes serão injetadas aqui -->
+</div>
 
-<div class="mt-2">
-    <button id="btnSelectAll" class="btn btn-sm btn-outline-primary">
+<div class="mb-3">
+    <button id="btnSelectAll" class="btn btn-outline-primary btn-sm">
         Selecionar todos
     </button>
-    <button id="btnClearAll" class="btn btn-sm btn-outline-secondary">
+    <button id="btnClearAll" class="btn btn-outline-secondary btn-sm">
         Limpar seleção
     </button>
 </div>
 
-<div class="mt-3">
+<div class="mb-3">
     <button id="btnConsulta" class="btn btn-primary">
         Iniciar consulta
     </button>
@@ -37,14 +38,12 @@
     </button>
 </div>
 
-<div id="loading" class="mt-3">
-    <div class="spinner-border text-info" role="status"></div>
-    <span class="ml-2">Aguarde, consultando…</span>
+<div id="loading" class="mb-3">
+    <span class="spinner-border text-info" role="status"></span>
+    <span id="progress" class="ml-2">Aguarde…</span>
 </div>
 
 <div id="warnings"></div>
-
-<pre id="log" style="display:none; background:#f8f9fa; padding:1rem;"></pre>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>
