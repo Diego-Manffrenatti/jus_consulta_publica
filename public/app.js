@@ -159,120 +159,112 @@ const CNPJS_FIXOS = [
   { name: 'Wilson Sons Terminais e Logística Ltda',           cnpj: '03852972000100' }
 ];
 
-// Injeta checkboxes no container
-function renderCheckboxes() {
+function montaListaCheckboxes() {
   const container = document.getElementById('cnpjCheckboxes');
   CNPJS_FIXOS.forEach(({ name, cnpj }) => {
-    const div = document.createElement('div');
-    div.className = 'form-check';
-    div.innerHTML = `
-      <input class="form-check-input" type="checkbox"
-             id="cb_${cnpj}" data-cnpj="${cnpj}" checked>
-      <label class="form-check-label" for="cb_${cnpj}">
-        ${name} — ${cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-          '$1.$2.$3/$4-$5')}
+    const id = `chk_${cnpj}`;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <label>
+        <input type="checkbox" id="${id}" data-cnpj="${cnpj}" />
+        ${name} — ${cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')}
       </label>
     `;
-    container.appendChild(div);
+    container.appendChild(wrapper);
   });
+
+  // botões de selecionar todos / nenhum
+  const ctrl = document.createElement('div');
+  ctrl.innerHTML = `
+    <button id="selTodos">Marcar todos</button>
+    <button id="deselTodos">Desmarcar todos</button>
+  `;
+  container.prepend(ctrl);
+  document.getElementById('selTodos').onclick = () =>
+    document.querySelectorAll('#cnpjCheckboxes input').forEach(i => i.checked = true);
+  document.getElementById('deselTodos').onclick = () =>
+    document.querySelectorAll('#cnpjCheckboxes input').forEach(i => i.checked = false);
 }
 
-// Selecionar todos / limpar seleção
-function bindSelectClear() {
-  document.getElementById('btnSelectAll').onclick = () => {
-    document.querySelectorAll('#cnpjCheckboxes input')
-      .forEach(cb => cb.checked = true);
-  };
-  document.getElementById('btnClearAll').onclick = () => {
-    document.querySelectorAll('#cnpjCheckboxes input')
-      .forEach(cb => cb.checked = false);
-  };
-}
-
-// Formata CNPJ “desmascarado” para XX.XXX.XXX/XXXX-XX
-function maskCnpj(cnpj) {
-  return cnpj.replace(
-    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    '$1.$2.$3/$4-$5'
-  );
-}
-
-// Consulta sequencial, acumulando resultados e avisos
 async function consultaEmLote(cnpjs) {
   const resultados = [];
-  const avisos = [];
   const total = cnpjs.length;
 
-  document.getElementById('loading').style.display = '';
+  document.getElementById('loading').classList.remove('hidden');
+
   for (let i = 0; i < total; i++) {
     const cnpj = cnpjs[i];
     document.getElementById('progress')
-      .textContent = `Processando ${i+1}/${total} — ${maskCnpj(cnpj)}`;
+      .textContent = `Processando ${i + 1}/${total} — ${cnpj}…`;
 
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ cnpjs: [cnpj] })
-    });
-    const json = await resp.json();
-    // se vier avisos (ex: >30 registros)
-    if (json.avisos?.length) {
-      json.avisos.forEach(w =>
-        avisos.push({
-          empresa: CNPJS_FIXOS.find(x => x.cnpj===cnpj)?.name || cnpj,
-          cnpj: maskCnpj(cnpj),
-          origem: 'trf1-pje1g',
-          mensagem: w.mensagem
-        })
-      );
+    try {
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpjs: [cnpj] }),
+        // opcional: abort after 15s
+        signal: (() => {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 15000);
+          return ctrl.signal;
+        })()
+      });
+
+      if (!resp.ok) {
+        console.warn(`CNPJ ${cnpj} retornou HTTP ${resp.status}`);
+        continue;
+      }
+
+      const { processos } = await resp.json();
+      resultados.push(...processos);
+    } catch (err) {
+      console.error(`Erro no CNPJ ${cnpj}:`, err);
+      // mostra no progresso
+      document.getElementById('progress')
+        .textContent += ` — erro`;
     }
-    resultados.push(...(json.processos||[]));
   }
-  document.getElementById('loading').style.display = 'none';
-  return { resultados, avisos };
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('progress')
+    .textContent = `Concluído: ${resultados.length} registros.`;
+
+  return resultados;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  renderCheckboxes();
-  bindSelectClear();
+  montaListaCheckboxes();
 
   document.getElementById('btnConsulta').onclick = async () => {
     const checked = Array.from(
       document.querySelectorAll('#cnpjCheckboxes input:checked')
-    ).map(cb => cb.dataset.cnpj)
-      .filter(c => c && c.length===14);
+    ).map(cb => cb.dataset.cnpj);
 
     if (!checked.length) {
       alert('Selecione ao menos um CNPJ.');
       return;
     }
 
-    const { resultados, avisos } = await consultaEmLote(checked);
-
-    // exibe avisos
-    const wcont = document.getElementById('warnings');
-    wcont.innerHTML = '';
-    avisos.forEach(w => {
-      const d = document.createElement('div');
-      d.className = 'alert alert-warning';
-      d.textContent = `${w.empresa} — ${w.cnpj} — ${w.origem}: ${w.mensagem}`;
-      wcont.appendChild(d);
-    });
-
-    window.RESULTS = resultados;
-    document.getElementById('btnDownload').disabled = !resultados.length;
+    window.RESULTS = await consultaEmLote(checked);
+    document.getElementById('btnDownload').disabled = !window.RESULTS.length;
   };
 
   document.getElementById('btnDownload').onclick = () => {
-    const data = (window.RESULTS||[]).map(r => ({
+    if (!Array.isArray(window.RESULTS) || !window.RESULTS.length) {
+      alert('Nenhum resultado para exportar.');
+      return;
+    }
+
+    const data = window.RESULTS.map(r => ({
       Origem:                r.origem,
       CNPJ:                  r.cnpj,
       Processo:              r.processo,
       Descrição:             r.descricao,
       'Última movimentação': r.ultimaMovimentacao,
       'Número do processo':  r.numero,
-      Objeto:                r.objeto  // renomeado
+      Objeto:                r.objeto  // antes "assunto", agora "objeto"
     }));
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Processos');

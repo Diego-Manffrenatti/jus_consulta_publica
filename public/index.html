@@ -3,47 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <title>Consulta Pública de Processos</title>
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
-    <style>
-        body { padding: 2rem; }
-        #loading { display: none; }
-        #cnpjCheckboxes { max-height: 300px; overflow-y: auto; }
-    </style>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<div id="cnpjCheckboxes" class="border p-2 mb-2">
-    <!-- checkboxes serão injetadas aqui -->
+<div id="cnpjCheckboxes">
+    <!-- Aqui será injetada a lista de checkboxes pelo app.js -->
 </div>
 
-<div class="mb-3">
-    <button id="btnSelectAll" class="btn btn-outline-primary btn-sm">
-        Selecionar todos
-    </button>
-    <button id="btnClearAll" class="btn btn-outline-secondary btn-sm">
-        Limpar seleção
-    </button>
-</div>
+<button id="btnConsulta">Iniciar Busca</button>
+<button id="btnDownload" disabled>Exportar para Excel</button>
 
-<div class="mb-3">
-    <button id="btnConsulta" class="btn btn-primary">
-        Iniciar consulta
-    </button>
-    <button id="btnDownload" class="btn btn-success" disabled>
-        Exportar para Excel
-    </button>
+<div id="loading" class="hidden">
+    <div id="progress">Aguardando...</div>
 </div>
-
-<div id="loading" class="mb-3">
-    <span class="spinner-border text-info" role="status"></span>
-    <span id="progress" class="ml-2">Aguarde…</span>
-</div>
-
-<div id="warnings"></div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>
