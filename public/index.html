@@ -8,12 +8,14 @@
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<div id="cnpjCheckboxes">
-    <!-- Aqui será injetada a lista de checkboxes pelo app.js -->
+<div class="cnpj-container" id="cnpjCheckboxes">
+    <!-- Lista de checkboxes será injetada aqui -->
 </div>
 
-<button id="btnConsulta">Iniciar Busca</button>
-<button id="btnDownload" disabled>Exportar para Excel</button>
+<div class="controls">
+    <button id="btnConsulta">Iniciar Busca</button>
+    <button id="btnDownload" disabled>Exportar para Excel</button>
+</div>
 
 <div id="loading" class="hidden">
     <div id="progress">Aguardando...</div>

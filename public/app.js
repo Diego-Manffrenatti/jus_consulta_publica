@@ -161,73 +161,96 @@ const CNPJS_FIXOS = [
 
 function montaListaCheckboxes() {
   const container = document.getElementById('cnpjCheckboxes');
-  CNPJS_FIXOS.forEach(({ name, cnpj }) => {
-    const id = `chk_${cnpj}`;
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = `
-      <label>
-        <input type="checkbox" id="${id}" data-cnpj="${cnpj}" />
-        ${name} — ${cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')}
-      </label>
-    `;
-    container.appendChild(wrapper);
-  });
 
-  // botões de selecionar todos / nenhum
+  // selecionar / desmarcar todos
   const ctrl = document.createElement('div');
   ctrl.innerHTML = `
-    <button id="selTodos">Marcar todos</button>
-    <button id="deselTodos">Desmarcar todos</button>
+    <button id="selTodosSmall" class="small-btn">Marcar todos</button>
+    <button id="deselTodosSmall" class="small-btn">Desmarcar todos</button>
   `;
-  container.prepend(ctrl);
-  document.getElementById('selTodos').onclick = () =>
-    document.querySelectorAll('#cnpjCheckboxes input').forEach(i => i.checked = true);
-  document.getElementById('deselTodos').onclick = () =>
-    document.querySelectorAll('#cnpjCheckboxes input').forEach(i => i.checked = false);
+  container.appendChild(ctrl);
+
+  document.getElementById('selTodosSmall').onclick = () =>
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+  document.getElementById('deselTodosSmall').onclick = () =>
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+
+  // checkboxes individuais
+  CNPJS_FIXOS.forEach(({ name, cnpj }) => {
+    const id = `chk_${cnpj}`;
+    const label = document.createElement('label');
+    label.innerHTML = `
+      <input type="checkbox" id="${id}" data-cnpj="${cnpj}" />
+      ${name} — ${cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')}
+    `;
+    container.appendChild(label);
+  });
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, { ...options, signal: controller.signal });
+    return resp;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 async function consultaEmLote(cnpjs) {
   const resultados = [];
   const total = cnpjs.length;
-
   document.getElementById('loading').classList.remove('hidden');
 
   for (let i = 0; i < total; i++) {
     const cnpj = cnpjs[i];
-    document.getElementById('progress')
-      .textContent = `Processando ${i + 1}/${total} — ${cnpj}…`;
+    document.getElementById('progress').textContent =
+      `Processando ${i+1}/${total} — ${cnpj}…`;
 
+    let resp;
     try {
-      const resp = await fetch(API_URL, {
+      resp = await fetchWithTimeout(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cnpjs: [cnpj] }),
-        // opcional: abort after 15s
-        signal: (() => {
-          const ctrl = new AbortController();
-          setTimeout(() => ctrl.abort(), 15000);
-          return ctrl.signal;
-        })()
+        body: JSON.stringify({ cnpjs: [cnpj] })
       });
-
-      if (!resp.ok) {
-        console.warn(`CNPJ ${cnpj} retornou HTTP ${resp.status}`);
+    } catch (err) {
+      console.warn(`⏱ Timeout no CNPJ ${cnpj}, tentando novamente…`);
+      // retry uma vez
+      try {
+        resp = await fetchWithTimeout(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cnpjs: [cnpj] })
+        });
+      } catch (err2) {
+        console.error(`❌ Falha no retry para ${cnpj}:`, err2);
+        document.getElementById('progress').textContent += ' — erro';
         continue;
       }
-
-      const { processos } = await resp.json();
-      resultados.push(...processos);
-    } catch (err) {
-      console.error(`Erro no CNPJ ${cnpj}:`, err);
-      // mostra no progresso
-      document.getElementById('progress')
-        .textContent += ` — erro`;
     }
+
+    if (!resp.ok) {
+      console.warn(`⚠️ CNPJ ${cnpj} retornou HTTP ${resp.status}, pulando.`);
+      document.getElementById('progress').textContent += ` — HTTP ${resp.status}`;
+      continue;
+    }
+
+    let json;
+    try {
+      json = await resp.json();
+    } catch (err) {
+      console.error(`❌ Resposta inválida JSON para ${cnpj}:`, err);
+      continue;
+    }
+
+    resultados.push(...(json.processos || []));
   }
 
   document.getElementById('loading').classList.add('hidden');
-  document.getElementById('progress')
-    .textContent = `Concluído: ${resultados.length} registros.`;
+  document.getElementById('progress').textContent =
+    `Concluído: ${resultados.length} registros.`;
 
   return resultados;
 }
@@ -262,7 +285,7 @@ window.addEventListener('DOMContentLoaded', () => {
       Descrição:             r.descricao,
       'Última movimentação': r.ultimaMovimentacao,
       'Número do processo':  r.numero,
-      Objeto:                r.objeto  // antes "assunto", agora "objeto"
+      Objeto:                r.objeto
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
