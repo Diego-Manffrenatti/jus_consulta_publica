@@ -3,31 +3,29 @@
 <head>
     <meta charset="UTF-8" />
     <title>Consulta Pública de Processos</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <h1>Consulta de Processos por CNPJ</h1>
 
-<div id="cnpjList">
-    <h2>Selecione os CNPJs</h2>
-
-    <!-- CONTROLES SEM OS ++ -->
-    <div class="controls">
-        <button id="btnSelectAll" class="btn-secondary">Marcar todos</button>
-        <button id="btnDeselectAll" class="btn-secondary">Desmarcar todos</button>
-    </div>
-
-    <ul id="cnpjCheckboxes"></ul>
-    <button id="btnConsulta" class="btn-primary">Consultar selecionados</button>
+<div class="controls">
+    <button id="btnSelectAll">Selecionar todos</button>
+    <button id="btnDeselectAll">Desselecionar todos</button>
 </div>
+
+<ul id="cnpjCheckboxes" class="scroll-list"></ul>
+
+<div class="controls">
+    <button id="btnConsulta">Buscar processos</button>
+    <button id="btnDownload" disabled>Exportar para Excel</button>
+</div>
+
+<div id="alerts"></div>
 
 <div id="loading" class="hidden">
-    <span class="spinner"></span>
-    <span id="loadingText">Carregando…</span>
+    <div class="spinner"></div>
+    <p id="progress">Aguardando…</p>
 </div>
-<div id="progress"></div>
-
-<button id="btnDownload" class="btn-primary" disabled>Baixar Excel</button>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>

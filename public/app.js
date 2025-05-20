@@ -193,19 +193,41 @@ async function consultaEmLote(cnpjs) {
   const total = cnpjs.length;
   const progressEl = document.getElementById('progress');
   const loadingEl  = document.getElementById('loading');
+  const alertsEl   = document.getElementById('alerts');
 
+  alertsEl.innerHTML = ''; // limpa alertas anteriores
   loadingEl.classList.remove('hidden');
+
   for (let i = 0; i < total; i++) {
     const cnpj = cnpjs[i];
     progressEl.textContent = `Processando ${i+1}/${total} — ${formatCnpjMask(cnpj)}…`;
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cnpjs: [cnpj] })
-    });
-    const { processos } = await resp.json();
+
+    let processos = [];
+    try {
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpjs: [cnpj] })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      ({ processos } = await resp.json());
+    } catch (err) {
+      console.error(`Erro no CNPJ ${cnpj}:`, err);
+      continue;
+    }
+
+    // se retornou 30 processos, mostra alerta
+    if (processos.length >= 30) {
+      const item = CNPJS_FIXOS.find(x => x.cnpj === cnpj);
+      const msg = document.createElement('div');
+      msg.className = 'alert yellow';
+      msg.textContent = `${item.name} — ${formatCnpjMask(cnpj)} — retornou mais de 30 registros`;
+      alertsEl.appendChild(msg);
+    }
+
     resultados.push(...processos);
   }
+
   loadingEl.classList.add('hidden');
   progressEl.textContent = `Concluído: ${resultados.length} registros.`;
   return resultados;
@@ -214,15 +236,12 @@ async function consultaEmLote(cnpjs) {
 window.addEventListener('DOMContentLoaded', () => {
   montarLista();
 
-  // Selecionar todos
   document.getElementById('btnSelectAll')
     .addEventListener('click', () => setAllCheckboxes(true));
 
-  // Desselec. todos
   document.getElementById('btnDeselectAll')
     .addEventListener('click', () => setAllCheckboxes(false));
 
-  // Consulta
   document.getElementById('btnConsulta')
     .addEventListener('click', async () => {
       const checks = Array.from(
@@ -237,7 +256,6 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btnDownload').disabled = !window.RESULTS.length;
     });
 
-  // Download Excel
   document.getElementById('btnDownload')
     .addEventListener('click', () => {
       if (!window.RESULTS || !window.RESULTS.length) {
@@ -250,8 +268,8 @@ window.addEventListener('DOMContentLoaded', () => {
         Processo:             r.processo,
         Descrição:            r.descricao,
         'Última movimentação': r.ultimaMovimentacao,
-        Número: r.numero,
-        Objeto: r.objeto
+        'Número do processo':  r.numero,
+        Objeto:               r.objeto
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
