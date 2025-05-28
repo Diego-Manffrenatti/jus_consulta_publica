@@ -95,6 +95,7 @@ export default async function (req, res) {
         .filter(Boolean)
         .join(' ');
 
+     const numero = '';
      resultados.push({
              origem: 'trf1-pje1g',
              cnpj,
