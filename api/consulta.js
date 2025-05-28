@@ -117,9 +117,9 @@ export default async function (req, res) {
           const htmlDet = await detResp.text();
           const $det = cheerio.load(htmlDet);
 
-          procNum = $det('div.name label:contains("Número Processo")')
-            .closest('.propertyView')
-            .find('div.value > div.col-sm-12')
+          procNum = $det('label:contains("Número Processo")')
+            .parent().next('.value')
+            .find('.col-sm-12').last()
             .text().trim();
 
           console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
