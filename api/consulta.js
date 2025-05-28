@@ -115,6 +115,39 @@ export default async function (req, res) {
         ultimaMovimentacao: mov
       });
 
+      // ===> Link de "ver detalhes"
+      const detLink = cols.eq(0).find('a').attr('onclick');
+      const relativeUrlMatch = detLink && detLink.match(/'([^']+)'/);
+      if (!relativeUrlMatch || !relativeUrlMatch[1]) {
+        console.log('    > Sem link de detalhes');
+        return;
+      }
+
+      const detUrl = BASE + relativeUrlMatch[1];
+      console.log(`    >> Buscando detalhes em: ${detUrl}`);
+
+      fetch(detUrl, {
+        headers: {
+          'User-Agent': 'Mozilla',
+          'Cookie': cookies
+        }
+      })
+        .then(detResp => detResp.text())
+        .then(htmlDet => {
+          const $det = cheerio.load(htmlDet);
+
+          const procNum = $det('label:contains("Número Processo")')
+            .closest('.propertyView')
+            .find('.value .col-sm-12')
+            .text().trim();
+
+          console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
+        })
+        .catch(err => {
+          console.error('    !! Erro ao buscar detalhes:', err.message);
+        });
+
+
     });
   }
 
