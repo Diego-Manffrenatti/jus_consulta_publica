@@ -77,83 +77,66 @@ export default async function (req, res) {
     const rows = $2('table.rich-table tbody tr');
     console.log('Linhas encontradas:', rows.length);
 
-    rows.each((i, tr) => {
+    for (const tr of rows.toArray()) {
       const $tr  = $2(tr);
       const cols = $tr.find('td');
-      console.log(` Linha ${i}, cols=${cols.length}`);
 
-      // ** Processo e Descrição na COLUNA 1 **
+      // (1) Extração de dados principais como já faz...
       const td1 = cols.eq(1);
       const nodes = td1.contents().toArray();
-      // Filtra só nós de texto e limpa
       const texts = nodes
         .filter(n => n.type === 'text' && n.data.trim())
         .map(n => n.data.trim());
-      console.log('    texts coluna 1 raw:', texts);
       const processo  = texts[0] || '';
       const descricao = texts[1] || '';
-      console.log(`    processo: "${processo}"`);
-      console.log(`    descricao: "${descricao}"`);
-      if (!processo) {
-        console.log(`    > Linha ${i} ignorada (sem processo)`);
-        return;
-      }
-
-      // ** Última movimentação na COLUNA 2 **
       const mov = cols.eq(2).text()
         .split(/\r?\n/)
         .map(l => l.trim())
         .filter(Boolean)
         .join(' ');
-      console.log(`    ultimaMovimentacao: "${mov}"`);
-
-      // ===> Link de "ver detalhes"
-      const detLink = cols.eq(0).find('a').attr('onclick');
-      const relativeUrlMatch = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
-      const relativeUrl = relativeUrlMatch && relativeUrlMatch[2]; // esse é o link correto
-
-      if (!relativeUrl) {
-        console.log('    > Sem link de detalhes');
-        return;
-      }
-
-      const detUrl = BASE + relativeUrl;
-      console.log(`    >> Buscando detalhes em: ${detUrl}`);
 
       let procNum = '';
-      fetch(detUrl, {
-        headers: {
-          'User-Agent': 'Mozilla',
-          'Cookie': cookies
-        }
-      })
-        .then(detResp => detResp.text())
-        .then(htmlDet => {
+
+      // (2) Buscar número do processo na tela de detalhes
+      try {
+        const detLink = cols.eq(0).find('a').attr('onclick');
+        const relativeUrlMatch = detLink && detLink.match(/'([^']+)'/);
+        if (!relativeUrlMatch || !relativeUrlMatch[1]) {
+          console.log('    > Sem link de detalhes');
+        } else {
+          const detUrl = BASE + relativeUrlMatch[1];
+          console.log(`    >> Buscando detalhes em: ${detUrl}`);
+
+          const detResp = await fetch(detUrl, {
+            headers: {
+              'User-Agent': 'Mozilla',
+              'Cookie': cookies
+            }
+          });
+
+          const htmlDet = await detResp.text();
           const $det = cheerio.load(htmlDet);
 
-          console.log('--- HTML detalhes ---');
-          console.log(htmlDet);
-
           procNum = $det('div.name label:contains("Número Processo")')
-              .closest('.propertyView')
-              .find('div.value > div.col-sm-12')
-              .text().trim();
+            .closest('.propertyView')
+            .find('div.value > div.col-sm-12')
+            .text().trim();
 
           console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
-        })
-        .catch(err => {
-          console.error('    !! Erro ao buscar detalhes:', err.message);
-        });
+        }
+      } catch (err) {
+        console.error('    !! Erro ao buscar detalhes:', err.message);
+      }
 
-        resultados.push({
-                origem:             'trf1-pje1g',
-                cnpj,
-                processo,
-                descricao,
-                ultimaMovimentacao: mov,
-                numeroProcessoDetalhado: procNum
-              });
-    });
+      resultados.push({
+        origem: 'trf1-pje1g',
+        cnpj,
+        processo,
+        descricao,
+        ultimaMovimentacao: mov,
+        numeroProcessoDetalhado: procNum
+      });
+    }
   }
 
   console.log('\nTotal coletado:', resultados.length);
