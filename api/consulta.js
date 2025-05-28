@@ -138,10 +138,10 @@ export default async function (req, res) {
         .then(htmlDet => {
           const $det = cheerio.load(htmlDet);
 
-          const procNum = $det('label:contains("Número Processo")')
-            .closest('.propertyView')
-            .find('.value .col-sm-12')
-            .text().trim();
+          const procNum = $det('div.name label:contains("Número Processo")')
+              .closest('.propertyView')
+              .find('div.value > div.col-sm-12')
+              .text().trim();
 
           console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
         })
