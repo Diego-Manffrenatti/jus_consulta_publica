@@ -125,6 +125,8 @@ export default async function (req, res) {
               });
 
               const htmlDet = await detResp.text();
+              console.log(` >> HTML`)
+              console.log(htmlDet)
               const $det = cheerio.load(htmlDet);
 
               const procNum = $det('label:contains("Número Processo")')
