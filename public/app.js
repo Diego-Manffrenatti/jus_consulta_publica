@@ -250,7 +250,7 @@ window.addEventListener('DOMContentLoaded', () => {
         Processo:             r.processo,
         Descrição:            r.descricao,
         'Última movimentação': r.ultimaMovimentacao,
-        numeroProcessoDetalhado: r.numeroProcessoDetalhado
+        numero : r.numero
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();

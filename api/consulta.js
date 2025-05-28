@@ -95,47 +95,53 @@ export default async function (req, res) {
         .filter(Boolean)
         .join(' ');
 
-      let procNum = '';
+     resultados.push({
+             origem: 'trf1-pje1g',
+             cnpj,
+             processo,
+             descricao,
+             ultimaMovimentacao: mov,
+             numero : numero
+           });
 
-      // (2) Buscar número do processo na tela de detalhes
-      try {
-        const detLink = cols.eq(0).find('a').attr('onclick');
-        const relativeUrlMatch = detLink && detLink.match(/'([^']+)'/);
-        if (!relativeUrlMatch || !relativeUrlMatch[1]) {
-          console.log('    > Sem link de detalhes');
-        } else {
-          const detUrl = BASE + relativeUrlMatch[1];
-          console.log(`    >> Buscando detalhes em: ${detUrl}`);
+            const detLink = cols.eq(0).find('a').attr('onclick');
+            const relativeUrlMatch = detLink && detLink.match(/'([^']+)'/);
 
-          const detResp = await fetch(detUrl, {
-            headers: {
-              'User-Agent': 'Mozilla',
-              'Cookie': cookies
+            if (!relativeUrlMatch || !relativeUrlMatch[1]) {
+              console.log('    > Sem link de detalhes');
+              return;
             }
-          });
 
-          const htmlDet = await detResp.text();
-          const $det = cheerio.load(htmlDet);
+            const detUrl = BASE + relativeUrlMatch[1];
+            console.log(`    >> Buscando detalhes em: ${detUrl}`);
 
-          procNum = $det('label:contains("Número Processo")')
-            .parent().next('.value')
-            .find('.col-sm-12').last()
-            .text().trim();
+            try {
+              const detResp = await fetch(detUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla',
+                  'Cookie': cookies
+                }
+              });
 
-          console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
-        }
-      } catch (err) {
-        console.error('    !! Erro ao buscar detalhes:', err.message);
-      }
+              const htmlDet = await detResp.text();
+              const $det = cheerio.load(htmlDet);
 
-      resultados.push({
-        origem: 'trf1-pje1g',
-        cnpj,
-        processo,
-        descricao,
-        ultimaMovimentacao: mov,
-        numeroProcessoDetalhado: procNum
-      });
+              const procNum = $det('label:contains("Número Processo")')
+                .closest('.propertyView')
+                .find('.value .col-sm-12 > div')
+                .text()
+                .trim();
+
+              console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
+
+              // Atualiza o último resultado adicionado com o número do processo
+              resultados[resultados.length - 1].numero = procNum;
+
+            } catch (err) {
+              console.error('    !! Erro ao buscar detalhes:', err.message);
+            }
+
+
     }
   }
 
