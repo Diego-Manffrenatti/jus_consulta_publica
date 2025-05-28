@@ -120,6 +120,7 @@ export default async function (req, res) {
       const detUrl = BASE + relativeUrl;
       console.log(`    >> Buscando detalhes em: ${detUrl}`);
 
+      let procNum = '';
       fetch(detUrl, {
         headers: {
           'User-Agent': 'Mozilla',
@@ -133,7 +134,7 @@ export default async function (req, res) {
           console.log('--- HTML detalhes ---');
           console.log(htmlDet);
 
-          const procNum = $det('div.name label:contains("Número Processo")')
+          procNum = $det('div.name label:contains("Número Processo")')
               .closest('.propertyView')
               .find('div.value > div.col-sm-12')
               .text().trim();
@@ -150,7 +151,7 @@ export default async function (req, res) {
                 processo,
                 descricao,
                 ultimaMovimentacao: mov,
-                numeroProcessoDetalhado: procNum || ''
+                numeroProcessoDetalhado: procNum
               });
     });
   }
