@@ -12,7 +12,7 @@ function formatCnpj(cnpjRaw) {
 const BASE      = 'https://pje1g.trf1.jus.br';
 const LIST_PATH = '/consultapublica/ConsultaPublica/listView.seam';
 
-export default async function handler(req, res) {
+export default async function (req, res) {
   console.log('--- handler start ---');
   if (req.method !== 'POST') {
     console.log('Método inválido:', req.method);
@@ -114,6 +114,34 @@ export default async function handler(req, res) {
         descricao,
         ultimaMovimentacao: mov
       });
+
+      // ===> Link de "ver detalhes"
+      const detLink = cols.eq(0).find('a').attr('href');
+      if (!detLink) {
+        console.log('    > Sem link de detalhes');
+        return;
+      }
+
+      // Monta a URL completa
+      const detUrl = BASE + detLink;
+      console.log(`    >> Buscando detalhes em: ${detUrl}`);
+
+      try {
+        const detResp = await fetch(detUrl, {
+          headers: {
+            'User-Agent': 'Mozilla',
+            'Cookie': cookies
+          }
+        });
+        const htmlDet = await detResp.text();
+        const $det = cheerio.load(htmlDet);
+
+        const procNum = $det('.caixaProcesso .caixaNumero .numero-processo').first().text().trim();
+        console.log(`    >> Número do processo na tela de detalhes: ${procNum}`);
+      } catch (err) {
+        console.error('    !! Erro ao buscar detalhes:', err.message);
+      }
+      
     });
   }
 

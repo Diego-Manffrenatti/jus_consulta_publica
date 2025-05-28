@@ -1,0 +1,49 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.15.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\dev\workspaces\jus_consulta_publica\.npmrc
+5 silly config load:file:C:\Users\diegobispo\.npmrc
+6 silly config load:file:C:\Users\diegobispo\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install" "--no-audit" "--no-fund" "--prefer-offline" "--cache" ".npm-cache-tmp"
+9 verbose logfile logs-max:10 dir:C:\dev\workspaces\jus_consulta_publica\.npm-cache-tmp\_logs\2025-05-26T19_27_07_049Z-
+10 verbose logfile C:\dev\workspaces\jus_consulta_publica\.npm-cache-tmp\_logs\2025-05-26T19_27_07_049Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest express@^4.18.2
+15 silly packumentCache full:https://registry.npmjs.org/express cache-miss
+16 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with SELF_SIGNED_CERT_IN_CHAIN
+17 http fetch GET https://registry.npmjs.org/express attempt 1 failed with SELF_SIGNED_CERT_IN_CHAIN
+18 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with SELF_SIGNED_CERT_IN_CHAIN
+19 http fetch GET https://registry.npmjs.org/express attempt 2 failed with SELF_SIGNED_CERT_IN_CHAIN
+20 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with SELF_SIGNED_CERT_IN_CHAIN
+21 http fetch GET https://registry.npmjs.org/express attempt 3 failed with SELF_SIGNED_CERT_IN_CHAIN
+22 silly fetch manifest nodemon@^3.0.2
+23 silly packumentCache full:https://registry.npmjs.org/nodemon cache-miss
+24 http fetch GET https://registry.npmjs.org/nodemon attempt 1 failed with SELF_SIGNED_CERT_IN_CHAIN
+25 http fetch GET https://registry.npmjs.org/nodemon attempt 2 failed with SELF_SIGNED_CERT_IN_CHAIN
+26 http fetch GET https://registry.npmjs.org/nodemon attempt 3 failed with SELF_SIGNED_CERT_IN_CHAIN
+27 silly placeDep ROOT express@ REPLACE for: jus-consulta-publica@1.0.0 want: ^4.18.2
+28 silly placeDep ROOT nodemon@ OK for: jus-consulta-publica@1.0.0 want: ^3.0.2
+29 verbose type system
+30 verbose stack FetchError: request to https://registry.npmjs.org/express failed, reason: self-signed certificate in certificate chain
+30 verbose stack     at ClientRequest.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+30 verbose stack     at ClientRequest.emit (node:events:518:28)
+30 verbose stack     at emitErrorEvent (node:_http_client:104:11)
+30 verbose stack     at _destroy (node:_http_client:898:9)
+30 verbose stack     at onSocketNT (node:_http_client:918:5)
+30 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+31 error code SELF_SIGNED_CERT_IN_CHAIN
+32 error errno SELF_SIGNED_CERT_IN_CHAIN
+33 error request to https://registry.npmjs.org/express failed, reason: self-signed certificate in certificate chain
+34 silly unfinished npm timer reify 1748287627674
+35 silly unfinished npm timer reify:loadTrees 1748287627675
+36 verbose cwd C:\dev\workspaces\jus_consulta_publica
+37 verbose os Windows_NT 10.0.26100
+38 verbose node v22.15.0
+39 verbose npm  v10.9.2
+40 verbose exit 1
+41 verbose code 1
+42 error A complete log of this run can be found in: C:\dev\workspaces\jus_consulta_publica\.npm-cache-tmp\_logs\2025-05-26T19_27_07_049Z-debug-0.log

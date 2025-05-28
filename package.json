@@ -1,28 +1,17 @@
 {
-  "name": "jus_consulta_publica",
+  "name": "jus-consulta-publica",
   "version": "1.0.0",
   "type": "module",
-  "description": "Consultar os processos de um determinado CNPJ no âmbito federal",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Diego-Manffrenatti/jus_consulta_publica.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Diego-Manffrenatti/jus_consulta_publica/issues"
-  },
-  "homepage": "https://github.com/Diego-Manffrenatti/jus_consulta_publica#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "express": "^5.1.0",
-    "playwright": "^1.52.0",
-    "xlsx": "^0.18.5"
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
