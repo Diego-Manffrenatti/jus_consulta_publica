@@ -249,7 +249,8 @@ window.addEventListener('DOMContentLoaded', () => {
         CNPJ:                 formatCnpjMask(r.cnpj),
         Processo:             r.processo,
         Descrição:            r.descricao,
-        'Última movimentação': r.ultimaMovimentacao
+        'Última movimentação': r.ultimaMovimentacao,
+        numeroProcessoDetalhado: r.numeroProcessoDetalhado
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();

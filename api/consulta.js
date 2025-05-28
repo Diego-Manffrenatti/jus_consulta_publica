@@ -107,14 +107,6 @@ export default async function (req, res) {
         .join(' ');
       console.log(`    ultimaMovimentacao: "${mov}"`);
 
-      resultados.push({
-        origem:             'trf1-pje1g',
-        cnpj,
-        processo,
-        descricao,
-        ultimaMovimentacao: mov
-      });
-
       // ===> Link de "ver detalhes"
       const detLink = cols.eq(0).find('a').attr('onclick');
       const relativeUrlMatch = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
@@ -152,7 +144,14 @@ export default async function (req, res) {
           console.error('    !! Erro ao buscar detalhes:', err.message);
         });
 
-
+        resultados.push({
+                origem:             'trf1-pje1g',
+                cnpj,
+                processo,
+                descricao,
+                ultimaMovimentacao: mov,
+                numeroProcessoDetalhado: procNum || ''
+              });
     });
   }
 
