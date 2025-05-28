@@ -77,8 +77,8 @@ export default async function (req, res) {
     const rows = $2('table.rich-table tbody tr');
     console.log('Linhas encontradas:', rows.length);
 
-    for (let i = 0; i < rows.length; i++) {
-      const tr = rows[i];
+    rows.each((i, tr) => {
+      const $tr  = $2(tr);
       const cols = $tr.find('td');
       console.log(` Linha ${i}, cols=${cols.length}`);
 
