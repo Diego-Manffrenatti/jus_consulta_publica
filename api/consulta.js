@@ -129,7 +129,8 @@ export default async function (req, res) {
 
               const procNum = $det('label:contains("Número Processo")')
                 .closest('.propertyView')
-                .find('.value .col-sm-12 > div')
+                .find('.value .col-sm-12')
+                .last()
                 .text()
                 .trim();
 
