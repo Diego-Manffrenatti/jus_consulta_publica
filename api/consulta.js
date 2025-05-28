@@ -106,14 +106,15 @@ export default async function (req, res) {
            });
 
             const detLink = cols.eq(0).find('a').attr('onclick');
-            const relativeUrlMatch = detLink && detLink.match(/'([^']+)'/);
+            const relativeUrlMatch = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
+            const relativeUrl = relativeUrlMatch && relativeUrlMatch[2]; // esse é o link correto
 
-            if (!relativeUrlMatch || !relativeUrlMatch[1]) {
+            if (!relativeUrl) {
               console.log('    > Sem link de detalhes');
               return;
             }
 
-            const detUrl = BASE + relativeUrlMatch[1];
+            const detUrl = BASE + relativeUrl;
             console.log(`    >> Buscando detalhes em: ${detUrl}`);
 
             try {
