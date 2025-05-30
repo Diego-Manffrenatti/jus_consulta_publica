@@ -149,72 +149,69 @@ export default async function (req, res) {
 
     }*/
 
-    const detalhePromises = rows.toArray().map(async (tr, i) => {
-      const $tr  = $2(tr);
-      const cols = $tr.find('td');
-      const td1 = cols.eq(1);
+const promises = [];
 
-      const nodes = td1.contents().toArray();
-      const texts = nodes.filter(n => n.type === 'text' && n.data.trim()).map(n => n.data.trim());
+rows.each((i, tr) => {
+  const $tr  = $2(tr);
+  const cols = $tr.find('td');
+  const td1 = cols.eq(1);
+  const nodes = td1.contents().toArray();
+  const texts = nodes.filter(n => n.type === 'text' && n.data.trim()).map(n => n.data.trim());
+  const processo  = texts[0] || '';
+  const descricao = texts[1] || '';
+  const mov = cols.eq(2).text().split(/\r?\n/).map(l => l.trim()).filter(Boolean).join(' ');
 
-      const processo  = texts[0] || '';
-      const descricao = texts[1] || '';
-      const mov = cols.eq(2).text().split(/\r?\n/).map(l => l.trim()).filter(Boolean).join(' ');
+  resultados.push({
+    origem:             'trf1-pje1g',
+    cnpj,
+    processo,
+    descricao,
+    ultimaMovimentacao: mov
+  });
 
-      const item = {
-        origem: 'trf1-pje1g',
-        cnpj,
-        processo,
-        descricao,
-        ultimaMovimentacao: mov
-      };
+  const detLink = cols.eq(0).find('a').attr('onclick');
+  const relativeUrlMatch = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
+  const relativeUrl = relativeUrlMatch && relativeUrlMatch[2];
+  if (!relativeUrl) return;
 
-      resultados.push(item); // já adiciona, vamos preencher detalhes depois
+  const detUrl = BASE + relativeUrl;
 
-      const detLink = cols.eq(0).find('a').attr('onclick');
-      const match = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
-      const relativeUrl = match && match[2];
-
-      if (!relativeUrl) return;
-
-      const detUrl = BASE + relativeUrl;
-
-      try {
-        const detResp = await fetch(detUrl, {
-          headers: {
-            'User-Agent': 'Mozilla',
-            'Cookie': cookies
-          }
-        });
-
-        const htmlDet = await detResp.text();
+  // Enfileira as promessas
+  promises.push(
+    fetch(detUrl, {
+      headers: {
+        'User-Agent': 'Mozilla',
+        'Cookie': cookies
+      }
+    })
+      .then(res => res.text())
+      .then(htmlDet => {
         const $det = cheerio.load(htmlDet);
-
         const procNum = $det('label:contains("Número Processo")')
           .closest('.propertyView')
           .find('.value .col-sm-12')
           .last()
-          .text()
-          .trim();
+          .text().trim();
 
         const objeto = $det('label:contains("Assunto")')
           .closest('.propertyView')
           .find('.value .col-sm-12')
           .last()
-          .text()
-          .trim();
+          .text().trim();
 
-        item.numero = procNum;
-        item.assunto = objeto;
+        // Atualiza o último registro com base no índice da promise
+        resultados[i].numero = procNum;
+        resultados[i].assunto = objeto;
+      })
+      .catch(err => {
+        console.error(`Erro ao buscar detalhes do processo ${i}:`, err.message);
+      })
+  );
+});
 
-      } catch (err) {
-        console.error(`Erro ao buscar detalhes da linha ${i}:`, err.message);
-      }
-    });
+// Aguarda todos os detalhes
+await Promise.all(promises);
 
-  }
-   await Promise.all(detalhePromises);
-   
   console.log('\nTotal coletado:', resultados.length);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ processos: resultados });
