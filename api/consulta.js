@@ -101,11 +101,11 @@ export default async function (req, res) {
              cnpj,
              processo,
              descricao,
-             ultimaMovimentacao: mov,
-             numero : numero
+             ultimaMovimentacao: mov//,
+             //numero : numero
            });
 
-            const detLink = cols.eq(0).find('a').attr('onclick');
+            /*const detLink = cols.eq(0).find('a').attr('onclick');
             const relativeUrlMatch = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
             const relativeUrl = relativeUrlMatch && relativeUrlMatch[2]; // esse é o link correto
 
@@ -144,7 +144,7 @@ export default async function (req, res) {
 
             } catch (err) {
               console.error('    !! Erro ao buscar detalhes:', err.message);
-            }
+            } */
 
 
     }
