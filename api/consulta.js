@@ -77,8 +77,8 @@ export default async function (req, res) {
     const rows = $2('table.rich-table tbody tr');
     console.log('Linhas encontradas:', rows.length);
 
-    for (const tr of rows.toArray()) {
-      const $tr  = $2(tr);
+    /*for (const tr of rows.toArray()) {
+      /*const $tr  = $2(tr);
       const cols = $tr.find('td');
 
       // (1) Extração de dados principais como já faz...
@@ -144,12 +144,77 @@ export default async function (req, res) {
 
             } catch (err) {
               console.error('    !! Erro ao buscar detalhes:', err.message);
-            } */
+            }
 
 
-    }
+    }*/
+
+    const detalhePromises = rows.toArray().map(async (tr, i) => {
+      const $tr  = $2(tr);
+      const cols = $tr.find('td');
+      const td1 = cols.eq(1);
+
+      const nodes = td1.contents().toArray();
+      const texts = nodes.filter(n => n.type === 'text' && n.data.trim()).map(n => n.data.trim());
+
+      const processo  = texts[0] || '';
+      const descricao = texts[1] || '';
+      const mov = cols.eq(2).text().split(/\r?\n/).map(l => l.trim()).filter(Boolean).join(' ');
+
+      const item = {
+        origem: 'trf1-pje1g',
+        cnpj,
+        processo,
+        descricao,
+        ultimaMovimentacao: mov
+      };
+
+      resultados.push(item); // já adiciona, vamos preencher detalhes depois
+
+      const detLink = cols.eq(0).find('a').attr('onclick');
+      const match = detLink && detLink.match(/'([^']+)'[^']*'([^']+)'/);
+      const relativeUrl = match && match[2];
+
+      if (!relativeUrl) return;
+
+      const detUrl = BASE + relativeUrl;
+
+      try {
+        const detResp = await fetch(detUrl, {
+          headers: {
+            'User-Agent': 'Mozilla',
+            'Cookie': cookies
+          }
+        });
+
+        const htmlDet = await detResp.text();
+        const $det = cheerio.load(htmlDet);
+
+        const procNum = $det('label:contains("Número Processo")')
+          .closest('.propertyView')
+          .find('.value .col-sm-12')
+          .last()
+          .text()
+          .trim();
+
+        const objeto = $det('label:contains("Assunto")')
+          .closest('.propertyView')
+          .find('.value .col-sm-12')
+          .last()
+          .text()
+          .trim();
+
+        item.numero = procNum;
+        item.assunto = objeto;
+
+      } catch (err) {
+        console.error(`Erro ao buscar detalhes da linha ${i}:`, err.message);
+      }
+    });
+
   }
-
+   await Promise.all(detalhePromises);
+   
   console.log('\nTotal coletado:', resultados.length);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ processos: resultados });
